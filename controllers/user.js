@@ -27,7 +27,7 @@ exports.publicProfile = (req, res) => {
         Blog.find({ postedBy: userId })
             .populate('categories', '_id name slug')
             .populate('tags', '_id name slug')
-            .populate('postedBy', '_id name')
+            .populate('postedBy', '_id name username createdAt updatedAt')
             .limit(10)
             .select('_id title slug excerpt categories tags postedBy createdAt updatedAt')
             .exec((err, data) => {
@@ -37,6 +37,7 @@ exports.publicProfile = (req, res) => {
                     });
                 }
                 user.photo = undefined;
+                user.salt = undefined;
                 user.hashed_password = undefined;
                 res.json({
                     user,
