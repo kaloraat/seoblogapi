@@ -75,6 +75,7 @@ exports.update = (req, res) => {
         }
 
         user = _.extend(user, fields);
+        user.role = 0;
 
         if (files.photo) {
             if (files.photo.size > 10000000) {
