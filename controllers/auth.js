@@ -6,6 +6,7 @@ const expressJwt = require('express-jwt');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 const _ = require('lodash');
 const { OAuth2Client } = require('google-auth-library');
+const fetch = require('node-fetch');
 // sendgrid
 const sgMail = require('@sendgrid/mail'); // SENDGRID_API_KEY
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -289,7 +290,7 @@ exports.googleLogin = (req, res) => {
                 } else {
                     let username = shortId.generate();
                     let profile = `${process.env.CLIENT_URL}/profile/${username}`;
-                    let password = jti;
+                    let password = jti + process.env.JWT_SECRET;
                     user = new User({ name, email, profile, username, password });
                     user.save((err, data) => {
                         if (err) {
@@ -310,4 +311,51 @@ exports.googleLogin = (req, res) => {
             });
         }
     });
+};
+
+exports.facebookLogin = (req, res) => {
+    // console.log(req.body);
+    const { userID, accessToken } = req.body;
+    const url = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,picture,email&access_token=${accessToken}`;
+    // console.log('url', url);
+    return (
+        fetch(url, {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            // .then(response => console.log(response))
+            .then(response => {
+                const { email, name, id } = response;
+                User.findOne({ email }).exec((err, user) => {
+                    if (user) {
+                        // console.log(user)
+                        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+                        res.cookie('token', token, { expiresIn: '1d' });
+                        const { _id, email, name, role, username } = user;
+                        return res.json({ token, user: { _id, email, name, role, username } });
+                    } else {
+                        let username = shortId.generate();
+                        let profile = `${process.env.CLIENT_URL}/profile/${username}`;
+                        let password = id + process.env.JWT_SECRET;
+                        user = new User({ name, email, profile, username, password });
+                        user.save((err, data) => {
+                            if (err) {
+                                return res.status(400).json({
+                                    error: errorHandler(err)
+                                });
+                            }
+                            const token = jwt.sign({ _id: data._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+                            res.cookie('token', token, { expiresIn: '1d' });
+                            const { _id, email, name, role, username } = data;
+                            return res.json({ token, user: { _id, email, name, role, username } });
+                        });
+                    }
+                });
+            })
+            .catch(error => {
+                res.json({
+                    error: 'Facebook login failed. Try later.'
+                });
+            })
+    );
 };

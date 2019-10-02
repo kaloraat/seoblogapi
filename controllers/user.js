@@ -58,6 +58,9 @@ exports.update = (req, res) => {
         }
 
         let user = req.profile;
+        // user's existing role before update
+        let existingRole = user.role;
+        let existingEmail = user.email;
 
         if (fields && fields.username && fields.username.length > 12) {
             return res.status(400).json({
@@ -76,7 +79,9 @@ exports.update = (req, res) => {
         }
 
         user = _.extend(user, fields);
-        user.role = 0;
+        // user's existing role - dont update - keep it same
+        user.role = existingRole;
+        user.email = existingEmail;
 
         if (files.photo) {
             if (files.photo.size > 10000000) {
