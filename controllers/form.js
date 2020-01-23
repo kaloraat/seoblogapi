@@ -60,3 +60,4 @@ exports.contactBlogAuthorForm = (req, res) => {
         });
     });
 };
+

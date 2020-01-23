@@ -10,6 +10,24 @@ const { errorHandler } = require('../helpers/dbErrorHandler');
 const fs = require('fs');
 const { smartTrim } = require('../helpers/blog');
 
+/*
+const { title, body, categories, tags } = req.body;
+const categoriesArray = categories.split(",");
+const tagsArray = tags.split(",");
+ 
+const blog = await Blog.create({
+  title,
+  body,
+  slug: slugify(title, { lower: true }),
+  metaTitle: `${title} | ${process.env.APP_NAME}`,
+  metaDesc: stripHtml(body.substring(0, 160)),
+  postedBy: req.user.id,
+  photo: req.file.location,
+  categories: categoriesArray,
+  tags: tagsArray
+});
+ */
+
 exports.create = (req, res) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
